@@ -1,0 +1,74 @@
+---
+name: Business-AU-Ledger
+version: 0.82
+author:
+  - 'Ron Savage <ron@savage.net.au>'
+abstract: 'A simple, web-based, payments/receipts manager'
+license: artistic
+resources:
+  license: http://opensource.org/licenses/artistic-license.php
+requires:
+  CGI::Session: 0
+  Config::IniFiles: 0
+  DBIx::Admin::CreateTable: 0
+  DBIx::Simple: 0
+  Data::FormValidator: 0
+  Data::FormValidator::Constraints: 0
+  Date::Simple: 0
+  FindBin::Real: 0
+  HTML::Template: 0
+  JSON::XS: 0
+  Log::Dispatch: 0
+  Log::Dispatch::DBI: 0
+  Regexp::Common: 0
+  accessors: 0
+build_requires:
+  Test::More: 0
+  Test::Pod: 0
+provides:
+  Business::AU::Ledger:
+    file: lib/Business/AU/Ledger.pm
+    version: 0.82
+  Business::AU::Ledger::Config:
+    file: lib/Business/AU/Ledger/Config.pm
+    version: 0.82
+  Business::AU::Ledger::Create:
+    file: lib/Business/AU/Ledger/Create.pm
+    version: 0.82
+  Business::AU::Ledger::Database:
+    file: lib/Business/AU/Ledger/Database.pm
+    version: 0.82
+  Business::AU::Ledger::Database::Base:
+    file: lib/Business/AU/Ledger/Database/Base.pm
+    version: 0.82
+  Business::AU::Ledger::Database::Payment:
+    file: lib/Business/AU/Ledger/Database/Payment.pm
+    version: 0.82
+  Business::AU::Ledger::Database::Receipt:
+    file: lib/Business/AU/Ledger/Database/Receipt.pm
+    version: 0.82
+  Business::AU::Ledger::Validate:
+    file: lib/Business/AU/Ledger/Validate.pm
+    version: 0.82
+  Business::AU::Ledger::View:
+    file: lib/Business/AU/Ledger/View.pm
+    version: 0.82
+  Business::AU::Ledger::View::Base:
+    file: lib/Business/AU/Ledger/View/Base.pm
+    version: 0.82
+  Business::AU::Ledger::View::Context:
+    file: lib/Business/AU/Ledger/View/Context.pm
+    version: 0.82
+  Business::AU::Ledger::View::Payment:
+    file: lib/Business/AU/Ledger/View/Payment.pm
+    version: 0.82
+  Business::AU::Ledger::View::Receipt:
+    file: lib/Business/AU/Ledger/View/Receipt.pm
+    version: 0.82
+  Business::AU::Ledger::View::Reconciliation:
+    file: lib/Business/AU/Ledger/View/Reconciliation.pm
+    version: 0.82
+generated_by: Module::Build version 0.280801
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.2.html
+  version: 1.2
