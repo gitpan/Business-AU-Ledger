@@ -1,6 +1,6 @@
 package Business::AU::Ledger::View::Payment;
 
-use Business::AU::Ledger::Validate;
+use Business::AU::Ledger::Util::Validate;
 
 use Date::Simple;
 
@@ -13,7 +13,7 @@ extends 'Business::AU::Ledger::View::Base';
 has field_width => (is => 'rw', isa => 'HashRef');
 has row_count   => (is => 'rw', isa => 'Int');
 
-our $VERSION = '0.82';
+our $VERSION = '0.84';
 
 # -----------------------------------------------
 
@@ -77,7 +77,7 @@ sub format_fields
 		}
 	}
 
-	$self -> row_count($self -> row_count() + 1);
+	$self -> row_count($self -> row_count + 1);
 
 	# The 'day' field will either come from the timestamp in a pre-existing record, or a total, or we leave it blank.
 
@@ -94,8 +94,8 @@ sub format_fields
 		}
 	}
 
-	my($field_width)    = $self -> field_width();
-	my($row_count)      = $self -> row_count();
+	my($field_width)    = $self -> field_width;
+	my($row_count)      = $self -> row_count;
 	my($result)         =
 	{
 		amount              => qq|<input type="text" name="amount_$row_count" id="amount_$row_count" size="$$field_width{'amount'}" value="$$default{'amount'}" />|,
@@ -136,7 +136,7 @@ sub format_fields
 sub initialize
 {
 	my($self)  = @_;
-	my($input) = Business::AU::Ledger::Validate -> new(db => $self -> db(), r => $self -> r() ) -> initialize_payments();
+	my($input) = Business::AU::Ledger::Util::Validate -> new(db => $self -> db, query => $self -> query) -> initialize_payments;
 
 	# Output all existing data (or errors).
 
@@ -144,11 +144,11 @@ sub initialize
 
 	# Output a row for new data.
 
-	push @$output, $self -> format_fields();
+	push @$output, $self -> format_fields;
 
 	$self -> log(__PACKAGE__ . '. Leaving initialize');
 
-	return JSON::XS -> new() -> encode({results => $output});
+	return JSON::XS -> new -> encode({results => $output});
 
 } # End of initialize.
 
@@ -158,7 +158,7 @@ sub log
 {
 	my($self, $s) = @_;
 
-	$self -> db() -> log($s);
+	$self -> db -> log($s);
 
 } # End of log.
 
@@ -167,9 +167,9 @@ sub log
 sub process
 {
 	my($self, $input) = @_;
-	my($msgs)   = $input -> msgs();
+	my($msgs)   = $input -> msgs;
 	my(%prompt) = map{my($s) = $_; $s =~ s/^field_//; $s =~ tr/_/ /; ($_ => ucfirst $s)} keys %$msgs;
-	my($error)  = $input -> has_invalid() || $input -> has_missing();
+	my($error)  = $input -> has_invalid || $input -> has_missing;
 
 	my($output);
 
@@ -198,17 +198,17 @@ sub process
 	{
 		# Use scalar context to retrieve a hash ref.
 
-		$input = $input -> valid();
+		$input = $input -> valid;
 
 		# Init phase uses 'initialize', payment phase uses 'month'.
 		#
 		# If the current month is before the first month of the financial year,
 		# then it (the current month) is in the next year.
 
-		my($month_number)       = $self -> db() -> get_month_number($$input{'initialize'} || $$input{'month'});
-		my($year)               = $self -> session() -> param('start_year');
-		my($start_month)        = $self -> session() -> param('start_month');
-		my($start_month_number) = $self -> db() -> get_month_number($start_month);
+		my($month_number)       = $self -> db -> get_month_number($$input{'initialize'} || $$input{'month'});
+		my($year)               = $self -> session -> param('start_year');
+		my($start_month)        = $self -> session -> param('start_month');
+		my($start_month_number) = $self -> db -> get_month_number($start_month);
 
 		if ($month_number < $start_month_number)
 		{
@@ -289,12 +289,12 @@ sub process
 				$self -> log("Saving $_ => $$input{$_}");
 			}
 
-			$self -> db() -> payment() -> add($input);
+			$self -> db -> payment -> add($input);
 		}
 
 		# This code goes here so we pick up the new record.
 
-		$output = $self -> db() -> payment() -> get_payments_via_ym($year, $month_number);
+		$output = $self -> db -> payment -> get_payments_via_ym($year, $month_number);
 
 		if ($#$output >= 0)
 		{
@@ -315,7 +315,7 @@ sub process
 sub submit
 {
 	my($self)  = @_;
-	my($input) = Business::AU::Ledger::Validate -> new(db => $self -> db(), r => $self -> r() ) -> payment();
+	my($input) = Business::AU::Ledger::Util::Validate -> new(db => $self -> db, query => $self -> query) -> payment;
 
 	# Output all existing data (or errors).
 
@@ -323,11 +323,11 @@ sub submit
 
 	# Output a row for new data.
 
-	push @$output, $self -> format_fields();
+	push @$output, $self -> format_fields;
 
 	$self -> log(__PACKAGE__ . ". Leaving submit. Row count now: @{[scalar @$output]}");
 
-	return JSON::XS -> new() -> encode({results => $output});
+	return JSON::XS -> new -> encode({results => $output});
 
 } # End of submit.
 
@@ -357,7 +357,7 @@ sub total
 		}
 	}
 
-	my($field_width) = $self -> field_width();
+	my($field_width) = $self -> field_width;
 
 	for (@key)
 	{

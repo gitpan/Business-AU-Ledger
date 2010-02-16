@@ -1,23 +1,21 @@
 package Business::AU::Ledger::View::Reconciliation;
 
-use Business::AU::Ledger::Validate;
-
 use JSON::XS;
 
 use Moose;
 
 extends 'Business::AU::Ledger::View::Base';
 
-our $VERSION = '0.82';
+our $VERSION = '0.84';
 
 # -----------------------------------------------
 
 sub initialize
 {
 	my($self)         = @_;
-	my($month)        = $self -> db() -> get_months();
-	my($start_month)  = $self -> session() -> param('start_month');
-	my($start_number) = $self -> db() -> get_month_number($start_month) - 1;
+	my($month)        = $self -> db -> get_months;
+	my($start_month)  = $self -> session -> param('start_month');
+	my($start_number) = $self -> db -> get_month_number($start_month) - 1;
 
 	my($i);
 	my($j);
@@ -43,7 +41,7 @@ sub initialize
 
 	$self -> log(__PACKAGE__ . '. Leaving initialize');
 
-	return JSON::XS -> new() -> encode({results => [@output]});
+	return JSON::XS -> new -> encode({results => [@output]});
 
 } # End of initialize.
 
@@ -53,7 +51,7 @@ sub log
 {
 	my($self, $s) = @_;
 
-	$self -> db() -> log($s);
+	$self -> db -> log($s);
 
 } # End of log.
 

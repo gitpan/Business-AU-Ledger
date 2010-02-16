@@ -5,7 +5,9 @@ use Moose;
 has db     => (is => 'rw', isa => 'Business::AU::Ledger::Database');
 has simple => (is => 'rw', isa => 'DBIx::Simple');
 
-our $VERSION = '0.82';
+use namespace::autoclean;
+
+our $VERSION = '0.84';
 
 # -----------------------------------------------
 
@@ -13,12 +15,12 @@ sub log
 {
 	my($self, $s) = @_;
 
-	$self -> db() -> log($s);
+	$self -> db -> log($s);
 
 }	# End of log.
 
 # --------------------------------------------------
 
-no Moose;
+__PACKAGE__ -> meta -> make_immutable;
 
 1;

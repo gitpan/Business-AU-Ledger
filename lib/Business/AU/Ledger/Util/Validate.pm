@@ -1,4 +1,4 @@
-package Business::AU::Ledger::Validate;
+package Business::AU::Ledger::Util::Validate;
 
 use Data::FormValidator;
 use Data::FormValidator::Constraints qw/:closures/;
@@ -7,11 +7,13 @@ use Moose;
 
 use Regexp::Common qw/number/;
 
-has db => (is => 'rw', isa => 'Business::AU::Ledger::Database');
-has r  => (is => 'rw', isa => 'CGI'); # 'r' as in Apache2::Request. 'q' confuses Emacs' syntax highlighting.
+has db    => (is => 'rw', isa => 'Business::AU::Ledger::Database');
+has query => (is => 'rw', isa => 'CGI');
+
+use namespace::autoclean;
 
 our $myself;
-our $VERSION = '0.82';
+our $VERSION = '0.84';
 
 # -----------------------------------------------
 
@@ -67,7 +69,7 @@ sub initialize_payments
 {
 	my($self) = @_;
 
-	return Data::FormValidator -> check($self -> r(), $self -> initialize_payments_profile() );
+	return Data::FormValidator -> check($self -> query, $self -> initialize_payments_profile);
 
 } # End of initialize_payments.
 
@@ -107,7 +109,7 @@ sub initialize_receipts
 {
 	my($self) = @_;
 
-	return Data::FormValidator -> check($self -> r(), $self -> initialize_receipts_profile() );
+	return Data::FormValidator -> check($self -> query, $self -> initialize_receipts_profile);
 
 } # End of initialize_receipts.
 
@@ -147,7 +149,7 @@ sub payment
 {
 	my($self) = @_;
 
-	return Data::FormValidator -> check($self -> r(), $self -> payment_profile() );
+	return Data::FormValidator -> check($self -> query, $self -> payment_profile);
 
 } # End of payment.
 
@@ -189,7 +191,7 @@ sub receipt
 {
 	my($self) = @_;
 
-	return Data::FormValidator -> check($self -> r(), $self -> receipt_profile() );
+	return Data::FormValidator -> check($self -> query, $self -> receipt_profile);
 
 } # End of receipt.
 
@@ -227,7 +229,7 @@ sub update_context
 {
 	my($self) = @_;
 
-	return Data::FormValidator -> check($self -> r(), $self -> update_context_profile() );
+	return Data::FormValidator -> check($self -> query, $self -> update_context_profile);
 
 } # End of update_context.
 
@@ -268,7 +270,7 @@ sub validate_amount
 	return sub
 	{
 		my($dfv, $value) = @_;
-		my($field) = $dfv -> get_current_constraint_field();
+		my($field) = $dfv -> get_current_constraint_field;
 
 		# Zap a leading $, if any;
 
@@ -310,7 +312,7 @@ sub validate_month
 {
 	my($value) = @_;
 
-	return $myself -> db() -> validate_month($value);
+	return $myself -> db -> validate_month($value);
 
 } # End of validate_month.
 
@@ -326,6 +328,6 @@ sub validate_year
 
 # -----------------------------------------------
 
-no Moose;
+__PACKAGE__ -> meta -> make_immutable;
 
 1;

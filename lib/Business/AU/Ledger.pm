@@ -4,17 +4,22 @@ use base 'CGI::Application';
 use strict;
 use warnings;
 
-our @accessors =      (qw/config db session simple view/);
-use accessors::classic qw/config db session simple view/;
-
-use Business::AU::Ledger::Config;
 use Business::AU::Ledger::Database;
+use Business::AU::Ledger::Util::Config;
 use Business::AU::Ledger::View;
 
 use CGI::Session;
 use DBIx::Simple;
 
-our $VERSION = '0.82';
+use Hash::FieldHash qw(:all);
+
+fieldhash my %config  => 'config';
+fieldhash my %db      => 'db';
+fieldhash my %session => 'session';
+fieldhash my %simple  => 'simple';
+fieldhash my %view    => 'view';
+
+our $VERSION = '0.84';
 
 # -----------------------------------------------
 
@@ -24,7 +29,7 @@ sub initialize_payments
 
 	$self -> log(__PACKAGE__ . '. Leaving initialize_payments');
 
-	return $self -> view() -> payment() -> initialize();
+	return $self -> view -> payment -> initialize;
 
 } # End of initialize_payments.
 
@@ -36,7 +41,7 @@ sub initialize_receipts
 
 	$self -> log(__PACKAGE__ . '. Leaving initialize_receipts');
 
-	return $self -> view() -> receipt() -> initialize();
+	return $self -> view -> receipt -> initialize;
 
 } # End of initialize_receipts.
 
@@ -48,7 +53,7 @@ sub initialize_reconciliation
 
 	$self -> log(__PACKAGE__ . '. Leaving initialize_reconciliation');
 
-	return $self -> view() -> reconciliation() -> initialize();
+	return $self -> view -> reconciliation -> initialize;
 
 } # End of initialize_reconciliation.
 
@@ -58,7 +63,7 @@ sub log
 {
 	my($self, $s) = @_;
 
-	$self -> db() -> log($s);
+	$self -> db -> log($s);
 
 } # End of log.
 
@@ -67,24 +72,32 @@ sub log
 sub setup
 {
 	my($self) = @_;
-	my($q)    = $self -> query();
+	my($q)    = $self -> query;
 
 	$self -> run_modes([qw/initialize_payments initialize_receipts initialize_reconciliation submit_payment submit_receipt tab_set update_context update_payments update_receipts/]);
 	$self -> start_mode('tab_set');
 
-	$self -> config(Business::AU::Ledger::Config -> new() );
-	$self -> simple(DBIx::Simple -> connect(@{$self -> config() -> get_dsn()}) );
-	$self -> db(Business::AU::Ledger::Database -> new(config => $self -> config(), simple => $self -> simple() ) );
+	$self -> config(Business::AU::Ledger::Util::Config -> new -> config);
+
+	my($config) = $self -> config;
+	my($attr)   =
+	{
+		AutoCommit => $$config{'AutoCommit'},
+		RaiseError => $$config{'RaiseError'},
+	};
+
+	$self -> simple(DBIx::Simple -> connect($$config{'dsn'}, $$config{'username'}, $$config{'password'}, $attr) );
+	$self -> db(Business::AU::Ledger::Database -> new(simple => $self -> simple) );
 
 	$self -> session
 	(
 	 CGI::Session -> new
 	 (
-	  $self -> config() -> get_session_driver(),
+	  $$config{'session_driver'},
 	  $q,
 	  {
-		  Handle    => $self -> simple() -> dbh(),
-		  TableName => $self -> config() -> get_session_table_name(),
+		  Handle    => $self -> simple -> dbh,
+		  TableName => $$config{'session_table_name'},
 	  },
 	  {
 		  name => 'sid',
@@ -93,12 +106,12 @@ sub setup
 	);
 
 	$self -> log('.' x 50);
-	$self -> log('sid => ' . $self -> session() -> id() );
+	$self -> log('sid => ' . $self -> session -> id);
 	$self -> log('.' x 50);
-	$self -> log("Param: $_ => " . $q -> param($_) ) for $q -> param();
+	$self -> log("Param: $_ => " . $q -> param($_) ) for $q -> param;
 	$self -> log(__PACKAGE__ . '. Leaving setup');
 
-	$self -> view(Business::AU::Ledger::View -> new(config => $self -> config(), db => $self -> db(), r => $q, session => $self -> session() ) );
+	$self -> view(Business::AU::Ledger::View -> new(config => $self -> config, db => $self -> db, query => $q, session => $self -> session) );
 
 } # End of setup.
 
@@ -110,7 +123,7 @@ sub submit_payment
 
 	$self -> log(__PACKAGE__ . '. Leaving submit_payment');
 
-	return $self -> view() -> payment() -> submit();
+	return $self -> view -> payment -> submit;
 
 } # End of submit_payment.
 
@@ -122,7 +135,7 @@ sub submit_receipt
 
 	$self -> log(__PACKAGE__ . '. Leaving submit_receipt');
 
-	return $self -> view() -> receipt() -> submit();
+	return $self -> view -> receipt -> submit;
 
 } # End of submit_receipt.
 
@@ -134,7 +147,7 @@ sub tab_set
 
 	$self -> log(__PACKAGE__ . '. Leaving tab_set');
 
-	return $self -> view() -> build_tab_set();
+	return $self -> view -> build_tab_set;
 
 } # End of tab_set.
 
@@ -146,7 +159,7 @@ sub update_context
 
 	$self -> log(__PACKAGE__ . '. Leaving update_context');
 
-	return $self -> view() -> context() -> update();
+	return $self -> view -> context -> update;
 
 } # End of update_context.
 
@@ -166,7 +179,7 @@ A CGI script:
 
 	use Business::AU::Ledger;
 
-	Business::AU::Ledger -> new() -> run();
+	Business::AU::Ledger -> new -> run;
 
 =head1 Description
 
@@ -253,9 +266,9 @@ new(...) returns an object of type C<Business::AU::Ledger>.
 
 This is the class's contructor.
 
-Usage: Business::AU::Ledger -> new().
+Usage: Business::AU::Ledger -> new.
 
-=head1 Method: setup()
+=head1 Method: setup
 
 This method lists the valid run modes, which are:
 

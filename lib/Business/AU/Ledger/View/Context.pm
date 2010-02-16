@@ -1,6 +1,6 @@
 package Business::AU::Ledger::View::Context;
 
-use Business::AU::Ledger::Validate;
+use Business::AU::Ledger::Util::Validate;
 
 use JSON::XS;
 
@@ -8,7 +8,7 @@ use Moose;
 
 extends 'Business::AU::Ledger::View::Base';
 
-our $VERSION = '0.82';
+our $VERSION = '0.84';
 
 # -----------------------------------------------
 
@@ -58,7 +58,7 @@ sub log
 {
 	my($self, $s) = @_;
 
-	$self -> db() -> log($s);
+	$self -> db -> log($s);
 
 } # End of log.
 
@@ -67,9 +67,9 @@ sub log
 sub process
 {
 	my($self, $input) = @_;
-	my($msgs)   = $input -> msgs();
+	my($msgs)   = $input -> msgs;
 	my(%prompt) = map{my($s) = $_; $s =~ s/^field_//; $s =~ tr/_/ /; ($_ => ucfirst $s)} keys %$msgs;
-	my($error)  = $input -> has_invalid() || $input -> has_missing();
+	my($error)  = $input -> has_invalid || $input -> has_missing;
 
 	my($output);
 
@@ -92,15 +92,15 @@ sub process
 	{
 		# Use scalar context to retrieve a hash ref.
 
-		my $input            = $input -> valid();
-		my($month_number)    = $self -> db() -> get_month_number($$input{'start_month'});
+		my $input            = $input -> valid;
+		my($month_number)    = $self -> db -> get_month_number($$input{'start_month'});
 		my($start_date)      = Date::Simple::ymd($$input{'start_year'}, $month_number, 1);
 		my($end_date)        = Date::Simple::ymd($$input{'start_year'} + 1, $month_number, 1);
 		$end_date            -= 1; # Last day of previous month. May be previous year.
-		my(@ymd)             = $end_date -> as_ymd();
+		my(@ymd)             = $end_date -> as_ymd;
 		$end_date            = $end_date - Date::Simple::days_in_month($ymd[0], $ymd[1]) + 1;
-		@ymd                 = $end_date -> as_ymd();
-		$$input{'end_month'} = $self -> db() -> get_month_name($ymd[1]);
+		@ymd                 = $end_date -> as_ymd;
+		$$input{'end_month'} = $self -> db -> get_month_name($ymd[1]);
 		$$input{'end_year'}  = $ymd[0];
 		my($row)             = $self -> format($input);
 
@@ -119,7 +119,7 @@ sub process
 
 	$self -> log(__PACKAGE__ . '. Leaving process');
 
-	return JSON::XS -> new() -> encode($output);
+	return JSON::XS -> new -> encode($output);
 
 } # End of process.
 
@@ -128,7 +128,7 @@ sub process
 sub update
 {
 	my($self)   = @_;
-	my($input)  = Business::AU::Ledger::Validate -> new(db => $self -> db(), r => $self -> r() ) -> update_context();
+	my($input)  = Business::AU::Ledger::Util::Validate -> new(db => $self -> db, query => $self -> query) -> update_context;
 	my($output) = $self -> process($input);
 
 	$self -> log(__PACKAGE__ . '. Leaving update');

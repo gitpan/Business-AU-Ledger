@@ -17,7 +17,9 @@ has receipt        => (is => 'rw', isa => 'Business::AU::Ledger::View::Receipt')
 has reconciliation => (is => 'rw', isa => 'Business::AU::Ledger::View::Reconciliation');
 has web_page       => (is => 'rw', isa => 'HTML::Template');
 
-our $VERSION = '0.82';
+use namespace::autoclean;
+
+our $VERSION = '0.84';
 
 # -----------------------------------------------
 
@@ -25,14 +27,14 @@ sub BUILD
 {
 	my($self) = @_;
 
-	$self -> context(Business::AU::Ledger::View::Context -> new(config => $self -> config(), db => $self -> db(), r => $self -> r(), session => $self -> session() ) );
-	$self -> payment(Business::AU::Ledger::View::Payment -> new(config => $self -> config(), db => $self -> db(), r => $self -> r(), session => $self -> session() ) );
-	$self -> receipt(Business::AU::Ledger::View::Receipt -> new(config => $self -> config(), db => $self -> db(), r => $self -> r(), session => $self -> session() ) );
-	$self -> reconciliation(Business::AU::Ledger::View::Reconciliation -> new(config => $self -> config(), db => $self -> db(), r => $self -> r(), session => $self -> session() ) );
+	$self -> context(Business::AU::Ledger::View::Context -> new(config => $self -> config, db => $self -> db, query => $self -> query, session => $self -> session) );
+	$self -> payment(Business::AU::Ledger::View::Payment -> new(config => $self -> config, db => $self -> db, query => $self -> query, session => $self -> session) );
+	$self -> receipt(Business::AU::Ledger::View::Receipt -> new(config => $self -> config, db => $self -> db, query => $self -> query, session => $self -> session) );
+	$self -> reconciliation(Business::AU::Ledger::View::Reconciliation -> new(config => $self -> config, db => $self -> db, query => $self -> query, session => $self -> session) );
 
 	$self -> web_page($self -> load_tmpl('web.page.tmpl') );
-	$self -> web_page() -> param(css_url => $self -> config() -> get_css_url() );
-	$self -> web_page() -> param(yui_url => $self -> config() -> get_yui_url() );
+	$self -> web_page -> param(css_url => ${$self -> config}{'css_url'});
+	$self -> web_page -> param(yui_url => ${$self -> config}{'yui_url'});
 
 } # End of BUILD;
 
@@ -50,7 +52,7 @@ sub build_about
 
 	$template -> param(tr_loop => \@tr);
 
-	$template = $template -> output();
+	$template = $template -> output;
 	$template =~ s/\n//g;
 
 	return $template;
@@ -63,21 +65,21 @@ sub build_context
 {
 	my($self)     = @_;
 	my($template) = $self -> load_tmpl('update.context.tmpl');
-	my($year)     = Date::Simple -> today() -> year();
+	my($year)     = Date::Simple -> today -> year;
 
 	$template -> param(rm          => 'update_context');
-	$template -> param(sid         => $self -> session() -> id() );
-	$template -> param(start_month => $self -> config() -> get_start_month() );
+	$template -> param(sid         => $self -> session -> id);
+	$template -> param(start_month => ${$self -> config}{'start_month'});
 	$template -> param(start_year  => $year);
 
-	$template = $template -> output();
+	$template = $template -> output;
 	$template =~ s/\n//g;
 
 	my($js) = $self -> load_tmpl('update.context.js');
 
-	$js -> param(form_action => $self -> config() -> get_form_action() );
+	$js -> param(form_action => ${$self -> config}{'form_action'});
 
-	return ($js -> output(), $template);
+	return ($js -> output, $template);
 
 } # End of build_context.
 
@@ -88,10 +90,10 @@ sub build_monthly_tabs
 	my($self) = @_;
 	my($js)   = $self -> load_tmpl('monthly.tabs.js');
 
-	$js -> param(form_action => $self -> config() -> get_form_action() );
-	$js -> param(sid         => $self -> session() -> id() );
+	$js -> param(form_action => ${$self -> config}{'form_action'});
+	$js -> param(sid         => $self -> session -> id);
 
-	return $js -> output();
+	return $js -> output;
 
 } # End of build_monthly_tabs.
 
@@ -104,7 +106,7 @@ sub build_payments
 
 	$template -> param(result => 'Financial Year not yet defined');
 
-	$template = $template -> output();
+	$template = $template -> output;
 	$template =~ s/\n//g;
 
 	return $template;
@@ -120,7 +122,7 @@ sub build_receipts
 
 	$template -> param(result => 'Financial Year not yet defined');
 
-	$template = $template -> output();
+	$template = $template -> output;
 	$template =~ s/\n//g;
 
 	return $template;
@@ -136,15 +138,15 @@ sub build_reconciliation
 
 	$template -> param(result     => 'Financial Year not yet defined');
 
-	$template = $template -> output();
+	$template = $template -> output;
 	$template =~ s/\n//g;
 
 	my($js) = $self -> load_tmpl('update.reconciliation.js');
 
-	$js -> param(form_action => $self -> config() -> get_form_action() );
-	$js -> param(sid         => $self -> session() -> id() );
+	$js -> param(form_action => ${$self -> config}{'form_action'});
+	$js -> param(sid         => $self -> session -> id);
 
-	return ($js -> output(), $template);
+	return ($js -> output, $template);
 
 } # End of build_reconciliation.
 
@@ -153,12 +155,12 @@ sub build_reconciliation
 sub build_tab_set
 {
 	my($self)           = @_;
-	my($about)          = $self -> build_about();
-	my($monthly_tabs)   = $self -> build_monthly_tabs();
-	my(@context)        = $self -> build_context();
-	my($payments)       = $self -> build_payments();
-	my($receipts)       = $self -> build_receipts();
-	my(@reconciliation) = $self -> build_reconciliation();
+	my($about)          = $self -> build_about;
+	my($monthly_tabs)   = $self -> build_monthly_tabs;
+	my(@context)        = $self -> build_context;
+	my($payments)       = $self -> build_payments;
+	my($receipts)       = $self -> build_receipts;
+	my(@reconciliation) = $self -> build_reconciliation;
 
 	# These things are being declared globally.
 
@@ -239,16 +241,16 @@ tab_set.appendTo('container');
 make_context_start_month_focus();
 EJS
 
-	$self -> web_page() -> param(head_js   => $head_js);
-	$self -> web_page() -> param(head_init => $head_init);
+	$self -> web_page -> param(head_js   => $head_js);
+	$self -> web_page -> param(head_init => $head_init);
 	$self -> log(__PACKAGE__ . '. Leaving build_tab_set');
 
-	return $self -> web_page() -> output();
+	return $self -> web_page -> output;
 
 } # End of build_tab_set.
 
 # --------------------------------------------------
 
-no Moose;
+__PACKAGE__ -> meta -> make_immutable;
 
 1;

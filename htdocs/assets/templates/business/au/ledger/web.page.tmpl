@@ -34,25 +34,26 @@ padding: 0;
 }
 
 </style>
-<link rel="stylesheet" type="text/css" href="<tmpl_var name=css_path>/table.even.odd.css">
-<link rel="stylesheet" type="text/css" href="<tmpl_var name=yui_path>/build/container/assets/skins/sam/container.css">
-<link rel="stylesheet" type="text/css" href="<tmpl_var name=yui_path>/build/datatable/assets/skins/sam/datatable.css">
-<link rel="stylesheet" type="text/css" href="<tmpl_var name=yui_path>/build/tabview/assets/skins/sam/tabview.css">
-<script type="text/javascript" src="<tmpl_var name=yui_path>/build/yahoo/yahoo-min.js"></script>
-<script type="text/javascript" src="<tmpl_var name=yui_path>/build/dom/dom-min.js"></script>
-<script type="text/javascript" src="<tmpl_var name=yui_path>/build/event/event-min.js"></script>
-<script type="text/javascript" src="<tmpl_var name=yui_path>/build/connection/connection-min.js"></script>
-<script type="text/javascript" src="<tmpl_var name=yui_path>/build/element/element-beta-min.js"></script>
-<script type="text/javascript" src="<tmpl_var name=yui_path>/build/datasource/datasource-min.js"></script>
-<script type="text/javascript" src="<tmpl_var name=yui_path>/build/json/json-min.js"></script>
-<script type="text/javascript" src="<tmpl_var name=yui_path>/build/datatable/datatable-min.js"></script>
-<script type="text/javascript" src="<tmpl_var name=yui_path>/build/tabview/tabview-min.js"></script>
+<link rel="stylesheet" type="text/css" href="<tmpl_var name=css_url>/table.even.odd.css">
+<link rel="stylesheet" type="text/css" href="<tmpl_var name=yui_url>/build/container/assets/skins/sam/container.css">
+<link rel="stylesheet" type="text/css" href="<tmpl_var name=yui_url>/build/datatable/assets/skins/sam/datatable.css">
+<link rel="stylesheet" type="text/css" href="<tmpl_var name=yui_url>/build/tabview/assets/skins/sam/tabview.css">
+
+<script type="text/javascript" src="<tmpl_var name=yui_url>/build/yahoo/yahoo-min.js"></script>
+<script type="text/javascript" src="<tmpl_var name=yui_url>/build/dom/dom-min.js"></script>
+<script type="text/javascript" src="<tmpl_var name=yui_url>/build/event/event-min.js"></script>
+<script type="text/javascript" src="<tmpl_var name=yui_url>/build/connection/connection-min.js"></script>
+<script type="text/javascript" src="<tmpl_var name=yui_url>/build/element/element-min.js"></script>
+<script type="text/javascript" src="<tmpl_var name=yui_url>/build/datasource/datasource-min.js"></script>
+<script type="text/javascript" src="<tmpl_var name=yui_url>/build/json/json-min.js"></script>
+<script type="text/javascript" src="<tmpl_var name=yui_url>/build/datatable/datatable-min.js"></script>
+<script type="text/javascript" src="<tmpl_var name=yui_url>/build/tabview/tabview-min.js"></script>
 <script type="text/javascript">
 <tmpl_var name=head_js>
 </script>
 <script type="text/javascript">
 function init()
-{ 
+{
 <tmpl_var name=head_init>
 }
 YAHOO.util.Event.onDOMReady(init);

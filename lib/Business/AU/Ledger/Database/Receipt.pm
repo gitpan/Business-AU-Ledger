@@ -4,7 +4,9 @@ use Moose;
 
 extends 'Business::AU::Ledger::Database::Base';
 
-our $VERSION = '0.82';
+use namespace::autoclean;
+
+our $VERSION = '0.84';
 
 # -----------------------------------------------
 
@@ -14,16 +16,16 @@ sub add
 
 	eval
 	{
-		$self -> simple() -> begin();
+		$self -> simple -> begin;
 		$self -> save_receipt_record('add', $receipt);
-		$self -> simple -> commit();
+		$self -> simple -> commit;
 	};
 
 	if ($@)
 	{
 		warn "add_receipt died: $@";
 
-		eval{$self -> simple() -> rollback()};
+		eval{$self -> simple -> rollback};
 
 		die $@;
 	}
@@ -37,7 +39,7 @@ sub add
 sub get_receipt_category_codes
 {
 	my($self) = @_;
-	my $category = $self -> simple() -> query('select name, id from category_codes where tx_type_id = 2') -> map();
+	my $category = $self -> simple -> query('select name, id from category_codes where tx_type_id = 2') -> map;
 
 	$self -> log(__PACKAGE__ . ". Leaving get_receipt_category_codes");
 
@@ -50,7 +52,7 @@ sub get_receipt_category_codes
 sub get_receipt_gst_codes
 {
 	my($self) = @_;
-	my $gst   = $self -> simple() -> query('select name, id from gst_codes where tx_type_id = 2') -> map();
+	my $gst   = $self -> simple -> query('select name, id from gst_codes where tx_type_id = 2') -> map;
 
 	$self -> log(__PACKAGE__ . ". Leaving get_receipt_gst_codes");
 
@@ -63,7 +65,7 @@ sub get_receipt_gst_codes
 sub get_receipt_tx_details
 {
 	my($self) = @_;
-	my $detail = $self -> simple() -> query('select name, id from tx_details') -> map();
+	my $detail = $self -> simple -> query('select name, id from tx_details') -> map;
 
 	$self -> log(__PACKAGE__ . ". Leaving get_receipt_tx_details");
 
@@ -77,7 +79,7 @@ sub get_receipts_via_ym
 {
 	my($self, $year, $month) = @_;
 	my($timestamp) = sprintf('%4i-%02i', $year, $month);
-	my $receipt = $self -> simple() -> query("select * from receipts where to_char(timestamp, 'YYYY-MM') = '$timestamp'") -> hashes();
+	my $receipt = $self -> simple -> query("select * from receipts where to_char(timestamp, 'YYYY-MM') = '$timestamp'") -> hashes;
 
 	$self -> log(__PACKAGE__ . ". Leaving get_receipts_via_ym");
 
@@ -132,13 +134,13 @@ sub save_receipt_record
 		@where = ('where id = ', $id);
 	}
 
-	$self -> simple() -> iquery($sql, $data, @where);
+	$self -> simple -> iquery($sql, $data, @where);
 
 	if ($context eq 'add')
 	{
-		$self -> db() -> get_last_insert_id($table_name);
+		$self -> db -> get_last_insert_id($table_name);
 
-		$$receipt{'id'} = $$data{'id'} = $self -> db() -> last_insert_id();
+		$$receipt{'id'} = $$data{'id'} = $self -> db -> last_insert_id;
 	}
 
 	$self -> log(__PACKAGE__ . '. Leaving save_receipt_record');
@@ -147,6 +149,6 @@ sub save_receipt_record
 
 # --------------------------------------------------
 
-no Moose;
+__PACKAGE__ -> meta -> make_immutable;
 
 1;

@@ -4,12 +4,12 @@ use HTML::Template;
 
 use Moose;
 
-has config  => (is => 'rw', isa => 'Business::AU::Ledger::Config');
+has config  => (is => 'rw', isa => 'HashRef');
 has db      => (is => 'rw', isa => 'Business::AU::Ledger::Database');
-has r       => (is => 'rw', isa => 'CGI'); # 'r' as in Apache2::Request. 'q' confuses Emacs' syntax highlighting.
+has query   => (is => 'rw', isa => 'CGI');
 has session => (is => 'rw', isa => 'CGI::Session');
 
-our $VERSION = '0.82';
+our $VERSION = '0.84';
 
 # -----------------------------------------------
 
@@ -30,7 +30,7 @@ sub build_select
 	 receipt_tx_detail      => 'receipt',
 	);
 	my($owner)    = $object{$key};
-	my($option)   = scalar $self -> db() -> $owner -> $method();
+	my($option)   = scalar $self -> db -> $owner -> $method;
 	my($template) = $self -> load_tmpl('select.tmpl');
 
 	if (! defined $default)
@@ -41,7 +41,7 @@ sub build_select
 	$template -> param(name => "$table$suffix");
 	$template -> param(loop => [map{ {default => ($$option{$_} == $default ? 1 : 0), name => $_, value => $$option{$_} } } sort keys %$option]);
 
-	return $template -> output();
+	return $template -> output;
 
 } # End of build_select.
 
@@ -50,13 +50,13 @@ sub build_select
 sub calculate_timestamp
 {
 	my($self, $month_name, $day) = @_;
-	my($month_number) = $self -> db() -> get_month_number($month_name);
+	my($month_number) = $self -> db -> get_month_number($month_name);
 
 	# To get the year, we need to determine if the user's month is in the start year or the end year.
 
-	my($start_year)         = $self -> session() -> param('start_year');
-	my($start_month)        = $self -> session() -> param('start_month');
-	my($start_month_number) = $self -> db() -> get_month_number($start_month);
+	my($start_year)         = $self -> session -> param('start_year');
+	my($start_month)        = $self -> session -> param('start_month');
+	my($start_month_number) = $self -> db -> get_month_number($start_month);
 
 	# If the current month is before the first month of the financial year,
 	# then it (the current month) is in the next year.
@@ -76,7 +76,7 @@ sub load_tmpl
 {
 	my($self, $name, @arg) = @_;
 
-	return HTML::Template -> new(path => $self -> config() -> get_tmpl_path(), filename => $name, @arg);
+	return HTML::Template -> new(path => ${$self -> config}{'tmpl_path'}, filename => $name, @arg);
 
 } # End of load_tmpl.
 
@@ -86,7 +86,7 @@ sub log
 {
 	my($self, $s) = @_;
 
-	$self -> db() -> log($s);
+	$self -> db -> log($s);
 
 }	# End of log.
 

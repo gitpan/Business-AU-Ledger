@@ -1,4 +1,4 @@
-package Business::AU::Ledger::Create;
+package Business::AU::Ledger::Util::Create;
 
 # Documentation:
 #	POD-style documentation is at the end. Extract it with pod2html.*.
@@ -9,6 +9,8 @@ package Business::AU::Ledger::Create;
 # Author:
 #	Ron Savage <ron@savage.net.au>
 
+use Business::AU::Ledger::Util::Config;
+
 use Carp;
 
 use DBIx::Admin::CreateTable;
@@ -18,24 +20,24 @@ use Encode;
 
 use FindBin::Real;
 
-use Business::AU::Ledger::Config;
-
 use Log::Dispatch;
 use Log::Dispatch::DBI;
 
 use Moose;
 
-has config         => (is => 'rw', isa => 'Business::AU::Ledger::Config');
+has config         => (is => 'rw', isa => 'HashRef');
 has creator        => (is => 'rw', isa => 'DBIx::Admin::CreateTable');
 has edit_types     => (is => 'rw', isa => 'HashRef');
 has last_insert_id => (is => 'rw', isa => 'Int');
 has logger         => (is => 'rw', isa => 'Log::Dispatch');
-has logging_edits  => (is => 'rw', isa => 'Int');
 has simple         => (is => 'rw', isa => 'DBIx::Simple');
 has table_names    => (is => 'rw', isa => 'HashRef');
+has time_option    => (is => 'rw', isa => 'Str');
 has verbose        => (is => 'rw', isa => 'Int');
 
-our $VERSION = '0.82';
+use namespace::autoclean;
+
+our $VERSION = '0.84';
 
 # -----------------------------------------------
 
@@ -43,20 +45,28 @@ sub BUILD
 {
 	my($self) = @_;
 
-	$self -> config(Business::AU::Ledger::Config -> new() );
-	$self -> simple(DBIx::Simple -> connect(@{$self -> config() -> get_dsn()}) );
-	$self -> creator(DBIx::Admin::CreateTable -> new(dbh => $self -> simple() -> dbh(), verbose => $self -> verbose() ) );
-	$self -> logger(Log::Dispatch -> new() );
-	$self -> logger() -> add
+	$self -> config(Business::AU::Ledger::Util::Config -> new -> config);
+
+	my($config) = $self -> config;
+	my($attr)   =
+	{
+		AutoCommit => $$config{'AutoCommit'},
+		RaiseError => $$config{'RaiseError'},
+	};
+
+	$self -> simple(DBIx::Simple -> connect($$config{'dsn'}, $$config{'username'}, $$config{'password'}, $attr) );
+	$self -> creator(DBIx::Admin::CreateTable -> new(dbh => $self -> simple -> dbh, verbose => $self -> verbose) );
+	$self -> time_option($self -> creator -> db_vendor =~ /(?:MySQL|Postgres)/i ? '(0) without time zone' : '');
+	$self -> logger(Log::Dispatch -> new);
+	$self -> logger -> add
 	(
 		Log::Dispatch::DBI -> new
 		(
-		 dbh       => $self -> simple() -> dbh(),
+		 dbh       => $self -> simple -> dbh,
 		 min_level => 'info',
 		 name      => 'Ledger',
 		)
 	);
-	$self -> logging_edits(0);
 
 	$self;
 
@@ -89,8 +99,7 @@ receipts
 	{
 		$method = "create_${table_name}_table";
 
-		$self -> $method();
-		$self -> simple() -> dbh() -> do("grant select, insert, update, delete, references on $table_name to daemon");
+		$self -> $method;
 	}
 
 }	# End of create_all_tables.
@@ -101,9 +110,9 @@ sub create_category_codes_table
 {
 	my($self)        = @_;
 	my($table_name)  = 'category_codes';
-	my($primary_key) = $self -> creator() -> generate_primary_key_sql($table_name);
+	my($primary_key) = $self -> creator -> generate_primary_key_sql($table_name);
 
-	$self -> creator() -> create_table(<<SQL);
+	$self -> creator -> create_table(<<SQL);
 create table $table_name
 (
 id $primary_key,
@@ -122,9 +131,9 @@ sub create_gst_codes_table
 {
 	my($self)        = @_;
 	my($table_name)  = 'gst_codes';
-	my($primary_key) = $self -> creator() -> generate_primary_key_sql($table_name);
+	my($primary_key) = $self -> creator -> generate_primary_key_sql($table_name);
 
-	$self -> creator() -> create_table(<<SQL);
+	$self -> creator -> create_table(<<SQL);
 create table $table_name
 (
 id $primary_key,
@@ -143,15 +152,16 @@ sub create_log_table
 {
 	my($self)        = @_;
 	my($table_name)  = 'log';
-	my($primary_key) = $self -> creator() -> generate_primary_key_sql($table_name);
+	my($time_option) = $self -> time_option;
+	my($primary_key) = $self -> creator -> generate_primary_key_sql($table_name);
 
-	$self -> creator() -> create_table(<<SQL);
+	$self -> creator -> create_table(<<SQL);
 create table $table_name
 (
 id $primary_key,
 level varchar(9) not null,
 message varchar(255) not null,
-timestamp timestamp (0) without time zone not null default current_timestamp
+timestamp timestamp $time_option not null default current_timestamp
 )
 SQL
 	$self -> log("Created table $table_name");
@@ -164,9 +174,9 @@ sub create_months_table
 {
 	my($self)        = @_;
 	my($table_name)  = 'months';
-	my($primary_key) = $self -> creator() -> generate_primary_key_sql($table_name);
+	my($primary_key) = $self -> creator -> generate_primary_key_sql($table_name);
 
-	$self -> creator() -> create_table(<<SQL);
+	$self -> creator -> create_table(<<SQL);
 create table $table_name
 (
 id $primary_key,
@@ -184,9 +194,9 @@ sub create_payment_methods_table
 {
 	my($self)        = @_;
 	my($table_name)  = 'payment_methods';
-	my($primary_key) = $self -> creator() -> generate_primary_key_sql($table_name);
+	my($primary_key) = $self -> creator -> generate_primary_key_sql($table_name);
 
-	$self -> creator() -> create_table(<<SQL);
+	$self -> creator -> create_table(<<SQL);
 create table $table_name
 (
 id $primary_key,
@@ -204,9 +214,10 @@ sub create_payments_table
 {
 	my($self)        = @_;
 	my($table_name)  = 'payments';
-	my($primary_key) = $self -> creator() -> generate_primary_key_sql($table_name);
+	my($time_option) = $self -> time_option;
+	my($primary_key) = $self -> creator -> generate_primary_key_sql($table_name);
 
-	$self -> creator() -> create_table(<<SQL);
+	$self -> creator -> create_table(<<SQL);
 create table $table_name
 (
 id $primary_key,
@@ -223,7 +234,7 @@ petty_cash_out numeric(10, 2) not null,
 private_use_amount numeric(10, 2) not null,
 private_use_percent numeric(6, 2) not null,
 reference varchar(255) not null,
-timestamp timestamp (0) without time zone not null
+timestamp timestamp $time_option not null
 )
 SQL
 	$self -> log("Created table $table_name");
@@ -236,9 +247,10 @@ sub create_receipts_table
 {
 	my($self)        = @_;
 	my($table_name)  = 'receipts';
-	my($primary_key) = $self -> creator() -> generate_primary_key_sql($table_name);
+	my($time_option) = $self -> time_option;
+	my($primary_key) = $self -> creator -> generate_primary_key_sql($table_name);
 
-	$self -> creator() -> create_table(<<SQL);
+	$self -> creator -> create_table(<<SQL);
 create table $table_name
 (
 id $primary_key,
@@ -251,7 +263,7 @@ bank_amount numeric(10, 2) not null,
 comment varchar(255) not null,
 gst_amount numeric(10, 2) not null,
 reference varchar(255) not null,
-timestamp timestamp (0) without time zone not null
+timestamp timestamp $time_option not null
 )
 SQL
 	$self -> log("Created table $table_name");
@@ -264,9 +276,9 @@ sub create_reconciliations_table
 {
 	my($self)        = @_;
 	my($table_name)  = 'reconciliations';
-	my($primary_key) = $self -> creator() -> generate_primary_key_sql($table_name);
+	my($primary_key) = $self -> creator -> generate_primary_key_sql($table_name);
 
-	$self -> creator() -> create_table(<<SQL);
+	$self -> creator -> create_table(<<SQL);
 create table $table_name
 (
 id $primary_key,
@@ -284,9 +296,9 @@ sub create_sessions_table
 {
 	my($self)       = @_;
 	my($table_name) = 'sessions';
-	my($type)       = $self -> creator() -> db_vendor() eq 'ORACLE' ? 'long' : 'text';
+	my($type)       = $self -> creator -> db_vendor eq 'ORACLE' ? 'long' : 'text';
 
-	$self -> creator() -> create_table(<<SQL, {no_sequence => 1});
+	$self -> creator -> create_table(<<SQL, {no_sequence => 1});
 create table $table_name
 (
 id char(32) not null primary key,
@@ -303,9 +315,9 @@ sub create_tx_details_table
 {
 	my($self)        = @_;
 	my($table_name)  = 'tx_details';
-	my($primary_key) = $self -> creator() -> generate_primary_key_sql($table_name);
+	my($primary_key) = $self -> creator -> generate_primary_key_sql($table_name);
 
-	$self -> creator() -> create_table(<<SQL);
+	$self -> creator -> create_table(<<SQL);
 create table $table_name
 (
 id $primary_key,
@@ -322,9 +334,9 @@ sub create_tx_types_table
 {
 	my($self)        = @_;
 	my($table_name)  = 'tx_types';
-	my($primary_key) = $self -> creator() -> generate_primary_key_sql($table_name);
+	my($primary_key) = $self -> creator -> generate_primary_key_sql($table_name);
 
-	$self -> creator() -> create_table(<<SQL);
+	$self -> creator -> create_table(<<SQL);
 create table $table_name
 (
 id $primary_key,
@@ -369,7 +381,7 @@ sub drop_table
 {
 	my($self, $table_name) = @_;
 
-	$self -> creator() -> drop_table($table_name);
+	$self -> creator -> drop_table($table_name);
 
 } # End of drop_table.
 
@@ -379,7 +391,7 @@ sub get_last_insert_id
 {
 	my($self, $table_name) = @_;
 
-	$self -> last_insert_id($self -> simple() -> dbh() -> last_insert_id(undef, undef, $table_name, undef) );
+	$self -> last_insert_id($self -> simple -> dbh -> last_insert_id(undef, undef, $table_name, undef) );
 
 }	# End of get_last_insert_id.
 
@@ -389,7 +401,7 @@ sub log
 {
 	my($self, $s) = @_;
 
-	$self -> logger() -> log(level => 'info', message => $s ? $s : '');
+	$self -> logger -> log(level => 'info', message => $s ? $s : '');
 
 }	# End of log.
 
@@ -401,12 +413,12 @@ sub populate_all_tables
 
 	# Warning: The order of these calls is important.
 
-	$self -> populate_tx_details_table();
-	$self -> populate_tx_types_table();
-	$self -> populate_category_codes_table();
-	$self -> populate_gst_codes_table();
-	$self -> populate_months_table();
-	$self -> populate_payment_methods_table();
+	$self -> populate_tx_details_table;
+	$self -> populate_tx_types_table;
+	$self -> populate_category_codes_table;
+	$self -> populate_gst_codes_table;
+	$self -> populate_months_table;
+	$self -> populate_payment_methods_table;
 
 }	# End of populate_all_tables.
 
@@ -418,7 +430,7 @@ sub populate_category_codes_table
 	my($table_name) = 'category_codes';
 	my($data)       = $self -> read_file("$table_name.txt");
 	my($sql)        = "insert into $table_name";
-	my(@type)       = $self -> read_tx_types_table();
+	my(@type)       = $self -> read_tx_types_table;
 
 	my(%id);
 
@@ -448,7 +460,7 @@ sub populate_gst_codes_table
 	my($table_name) = 'gst_codes';
 	my($data)       = $self -> read_file("$table_name.txt");
 	my($sql)        = "insert into $table_name";
-	my(@type)       = $self -> read_tx_types_table();
+	my(@type)       = $self -> read_tx_types_table;
 
 	my(%id);
 
@@ -555,7 +567,7 @@ sub populate_tx_types_table
 sub read_file
 {
 	my($self, $input_file_name) = @_;
-	$input_file_name            = FindBin::Real::Bin() . "/../data/$input_file_name";
+	$input_file_name            = FindBin::Real::Bin . "/../data/$input_file_name";
 
 	open(INX, $input_file_name) || Carp::croak("Can't open($input_file_name): $!");
 	my(@line) = grep{! /^$/ && ! /^#/} map{s/^\s+//; s/\s+$//; $_} <INX>;
@@ -572,8 +584,8 @@ sub read_tx_types_table
 {
 	my($self) = @_;
 
-	return $self -> simple() -> query('select * from tx_types') -> hashes();
-	
+	return $self -> simple -> query('select * from tx_types') -> hashes;
+
 } # End of read_tx_types_table.
 
 # --------------------------------------------------
@@ -584,15 +596,15 @@ sub transaction
 
 	eval
 	{
-		$self -> simple() -> begin();
-		$self -> simple() -> iquery($sql, $value);
+		$self -> simple -> begin;
+		$self -> simple -> iquery($sql, $value);
 		$self -> get_last_insert_id($table_name);
-		$self -> simple -> commit();
+		$self -> simple -> commit;
 	};
 
 	if ($@)
 	{
-		eval{$self -> simple() -> rollback()};
+		eval{$self -> simple -> rollback};
 
 		die $@;
 	}
@@ -601,6 +613,6 @@ sub transaction
 
 # -----------------------------------------------
 
-no Moose;
+__PACKAGE__ -> meta -> make_immutable;
 
 1;
