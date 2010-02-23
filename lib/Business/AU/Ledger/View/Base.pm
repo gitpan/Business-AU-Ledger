@@ -9,7 +9,9 @@ has db      => (is => 'rw', isa => 'Business::AU::Ledger::Database');
 has query   => (is => 'rw', isa => 'CGI');
 has session => (is => 'rw', isa => 'CGI::Session');
 
-our $VERSION = '0.84';
+use namespace::autoclean;
+
+our $VERSION = '0.85';
 
 # -----------------------------------------------
 
@@ -92,6 +94,6 @@ sub log
 
 # --------------------------------------------------
 
-no Moose;
+__PACKAGE__ -> meta -> make_immutable;
 
 1;

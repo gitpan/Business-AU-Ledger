@@ -19,7 +19,7 @@ has web_page       => (is => 'rw', isa => 'HTML::Template');
 
 use namespace::autoclean;
 
-our $VERSION = '0.84';
+our $VERSION = '0.85';
 
 # -----------------------------------------------
 

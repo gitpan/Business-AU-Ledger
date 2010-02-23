@@ -6,7 +6,9 @@ use Moose;
 
 extends 'Business::AU::Ledger::View::Base';
 
-our $VERSION = '0.84';
+use namespace::autoclean;
+
+our $VERSION = '0.85';
 
 # -----------------------------------------------
 
@@ -57,6 +59,6 @@ sub log
 
 # --------------------------------------------------
 
-no Moose;
+__PACKAGE__ -> meta -> make_immutable;
 
 1;
