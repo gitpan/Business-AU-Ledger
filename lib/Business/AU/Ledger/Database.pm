@@ -16,7 +16,7 @@ has simple         => (is => 'rw', isa => 'DBIx::Simple');
 
 use namespace::autoclean;
 
-our $VERSION = '0.85';
+our $VERSION = '0.86';
 
 # -----------------------------------------------
 

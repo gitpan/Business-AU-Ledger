@@ -19,7 +19,7 @@ fieldhash my %session => 'session';
 fieldhash my %simple  => 'simple';
 fieldhash my %view    => 'view';
 
-our $VERSION = '0.85';
+our $VERSION = '0.86';
 
 # -----------------------------------------------
 

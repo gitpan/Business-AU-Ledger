@@ -1,5 +1,8 @@
 Revision history for Perl extension Business::AU::Ledger.
 
+0.86  Wed Feb 24 16:44:00 2010
+	- Add namespace::autoclean to Build.PL and Makefile.PL.
+
 0.85  Sun Feb 21 12:54:19 2010
 	- Remove text 'All rights reserved' (for Debian licensing).
 	- Remove POD heads 'Required Modules' and 'Changes'.

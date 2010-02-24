@@ -29,6 +29,7 @@ my($builder) = Module::Build -> new
 	 Log::Dispatch                    => 2.26,
 	 Log::Dispatch::DBI               => 0.02,
 	 Moose                            => 0.98,
+	 namespace::autoclean             => 0.09,
 	 Regexp::Common                   => 2010010201,
  },
 );

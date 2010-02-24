@@ -12,7 +12,7 @@ has section          => (is => 'rw', isa => 'Str', required => 0);
 
 use namespace::autoclean;
 
-our $VERSION = '0.85';
+our $VERSION = '0.86';
 
 # -----------------------------------------------
 

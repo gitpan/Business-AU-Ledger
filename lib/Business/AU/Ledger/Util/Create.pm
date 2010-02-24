@@ -37,7 +37,7 @@ has verbose        => (is => 'rw', isa => 'Int');
 
 use namespace::autoclean;
 
-our $VERSION = '0.85';
+our $VERSION = '0.86';
 
 # -----------------------------------------------
 
