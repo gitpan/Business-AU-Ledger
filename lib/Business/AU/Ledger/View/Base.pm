@@ -4,14 +4,15 @@ use HTML::Template;
 
 use Moose;
 
-has config  => (is => 'rw', isa => 'HashRef');
-has db      => (is => 'rw', isa => 'Business::AU::Ledger::Database');
-has query   => (is => 'rw', isa => 'CGI');
-has session => (is => 'rw', isa => 'CGI::Session');
+has config      => (is => 'rw', isa => 'HashRef');
+has db          => (is => 'rw', isa => 'Business::AU::Ledger::Database');
+has form_action => (is => 'rw', isa => 'Str');
+has query       => (is => 'rw', isa => 'CGI');
+has session     => (is => 'rw', isa => 'CGI::Session');
 
 use namespace::autoclean;
 
-our $VERSION = '0.86';
+our $VERSION = '0.87';
 
 # -----------------------------------------------
 

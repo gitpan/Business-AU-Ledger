@@ -19,7 +19,7 @@ has web_page       => (is => 'rw', isa => 'HTML::Template');
 
 use namespace::autoclean;
 
-our $VERSION = '0.86';
+our $VERSION = '0.87';
 
 # -----------------------------------------------
 
@@ -27,10 +27,34 @@ sub BUILD
 {
 	my($self) = @_;
 
-	$self -> context(Business::AU::Ledger::View::Context -> new(config => $self -> config, db => $self -> db, query => $self -> query, session => $self -> session) );
-	$self -> payment(Business::AU::Ledger::View::Payment -> new(config => $self -> config, db => $self -> db, query => $self -> query, session => $self -> session) );
-	$self -> receipt(Business::AU::Ledger::View::Receipt -> new(config => $self -> config, db => $self -> db, query => $self -> query, session => $self -> session) );
-	$self -> reconciliation(Business::AU::Ledger::View::Reconciliation -> new(config => $self -> config, db => $self -> db, query => $self -> query, session => $self -> session) );
+	$self -> context(Business::AU::Ledger::View::Context -> new
+	(
+	 config => $self -> config,
+	 db => $self -> db,
+	 query => $self -> query,
+	 session => $self -> session,
+	) );
+
+	$self -> payment(Business::AU::Ledger::View::Payment -> new
+	(config => $self -> config,
+	 db => $self -> db,
+	 query => $self -> query,
+	 session => $self -> session,
+	) );
+
+	$self -> receipt(Business::AU::Ledger::View::Receipt -> new
+	(config => $self -> config,
+	 db => $self -> db,
+	 query => $self -> query,
+	 session => $self -> session,
+	) );
+
+	$self -> reconciliation(Business::AU::Ledger::View::Reconciliation -> new
+	(config => $self -> config,
+	 db => $self -> db,
+	 query => $self -> query,
+	 session => $self -> session,
+	) );
 
 	$self -> web_page($self -> load_tmpl('web.page.tmpl') );
 	$self -> web_page -> param(css_url => ${$self -> config}{'css_url'});
@@ -77,7 +101,7 @@ sub build_context
 
 	my($js) = $self -> load_tmpl('update.context.js');
 
-	$js -> param(form_action => ${$self -> config}{'form_action'});
+	$js -> param(form_action => $self -> form_action);
 
 	return ($js -> output, $template);
 
@@ -90,7 +114,7 @@ sub build_monthly_tabs
 	my($self) = @_;
 	my($js)   = $self -> load_tmpl('monthly.tabs.js');
 
-	$js -> param(form_action => ${$self -> config}{'form_action'});
+	$js -> param(form_action => $self -> form_action);
 	$js -> param(sid         => $self -> session -> id);
 
 	return $js -> output;
@@ -143,7 +167,7 @@ sub build_reconciliation
 
 	my($js) = $self -> load_tmpl('update.reconciliation.js');
 
-	$js -> param(form_action => ${$self -> config}{'form_action'});
+	$js -> param(form_action => $self -> form_action);
 	$js -> param(sid         => $self -> session -> id);
 
 	return ($js -> output, $template);

@@ -19,7 +19,7 @@ fieldhash my %session => 'session';
 fieldhash my %simple  => 'simple';
 fieldhash my %view    => 'view';
 
-our $VERSION = '0.86';
+our $VERSION = '0.87';
 
 # -----------------------------------------------
 
@@ -111,7 +111,14 @@ sub setup
 	$self -> log("Param: $_ => " . $q -> param($_) ) for $q -> param;
 	$self -> log(__PACKAGE__ . '. Leaving setup');
 
-	$self -> view(Business::AU::Ledger::View -> new(config => $self -> config, db => $self -> db, query => $q, session => $self -> session) );
+	$self -> view(Business::AU::Ledger::View -> new
+	(
+	 config      => $self -> config,
+	 db          => $self -> db,
+	 form_action => $self -> query -> url(-absolute => 1),
+	 query       => $q,
+	 session     => $self -> session,
+	) );
 
 } # End of setup.
 

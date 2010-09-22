@@ -13,7 +13,7 @@ has query => (is => 'rw', isa => 'CGI');
 use namespace::autoclean;
 
 our $myself;
-our $VERSION = '0.86';
+our $VERSION = '0.87';
 
 # -----------------------------------------------
 
