@@ -1,5 +1,8 @@
 Revision history for Perl extension Business::AU::Ledger.
 
+0.88  Fri Sep 24 11:28:00 2010
+	- Switch Config::IniFiles to Config::Tiny in Build.PL and Makefile.PL.
+
 0.87  Wed Sep 22 13:08:00 2010
 	- Remove form_action from config file. Use $self -> query -> url(-absolute => 1) instead.
 

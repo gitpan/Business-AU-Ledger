@@ -15,7 +15,7 @@ my($builder) = Module::Build -> new
  {
 	 CGI::Application                 => 4.31,
 	 CGI::Session                     => 4.42,
-	 Config::IniFiles                 => 2.56,
+	 Config::Tiny                     => 2.12,
 	 DBIx::Admin::CreateTable         => 2.04,
 	 DBIx::Simple                     => 1.32,
 	 Data::FormValidator              => 4.65,

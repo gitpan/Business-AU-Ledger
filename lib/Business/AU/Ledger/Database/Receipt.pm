@@ -6,7 +6,7 @@ extends 'Business::AU::Ledger::Database::Base';
 
 use namespace::autoclean;
 
-our $VERSION = '0.87';
+our $VERSION = '0.88';
 
 # -----------------------------------------------
 

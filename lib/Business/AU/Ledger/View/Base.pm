@@ -12,7 +12,7 @@ has session     => (is => 'rw', isa => 'CGI::Session');
 
 use namespace::autoclean;
 
-our $VERSION = '0.87';
+our $VERSION = '0.88';
 
 # -----------------------------------------------
 
